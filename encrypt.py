@@ -1,19 +1,52 @@
 from Crypto.Random import get_random_bytes
 from Crypto.Cipher import AES
-
-def generate_key():
-    public_key = get_random_bytes(16)
-    private_key = get_random_bytes(16)
-    
-    with open("./private_key.pub", "wb") as f:
-        f.write(private_key)
-    
-    with open("./encrypted_public.pub", "wb") as f:
-        cipher = AES.new(public_key, AES.MODE_EAX, nonce=None)
-        print(cipher)
-        f.write(cipher)
-    return public_key, private_key
+from Crypto.Protocol.KDF import PBKDF2
+from Crypto.Util.Padding import pad, unpad
 
 
-for i in range(4):
-    print(generate_key())
+def generate_key(recv_public):
+    salt = b'\x15\xd2\xa4\x1e\xb7\xcc\xe2\xa07\xf2F\xe8\xee`\x9d\xbb'
+    password = read_data(recv_public)
+    key = PBKDF2(password, salt, dkLen=32)
+
+    return key
+
+def encrypted_symmertric_key(key):
+    pass
+
+def encrypt_data(key, data):
+    cipher = AES.new(key, AES.MODE_CBC)
+    ciphered_data = cipher.encrypt(pad(data, AES.block_size))
+
+    return ciphered_data, cipher.iv
+
+def write_data(file_path, iv, data):
+    with open(file_path, 'wb') as f:
+        f.write(iv)
+        f.write(data)
+
+def read_data(file_path):
+    data = ""
+    with open(file_path, 'rb') as f:
+        data = f.read()
+
+    return data
+
+
+def decrypt_data(key, file_path):
+    with open(file_path, 'rb') as f:
+        iv = f.read(16)
+        decrypt_data = f.read()
+
+    cipher = AES.new(key, AES.MODE_CBC, iv=iv)
+    original = unpad(cipher.decrypt(decrypt_data), AES.block_size)
+    print(original)
+
+
+data = read_data('input.txt')
+key = generate_key()
+ciphered_data, iv = encrypt_data(key=key, data=data)
+print(iv)
+write_data('output.txt', iv, ciphered_data)
+
+decrypt_data(key, 'output.txt')
