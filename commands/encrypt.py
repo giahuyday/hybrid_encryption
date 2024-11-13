@@ -4,17 +4,13 @@ from Crypto.Protocol.KDF import PBKDF2
 from Crypto.Util.Padding import pad, unpad
 from Crypto.PublicKey import RSA
 
-def generate_public_key(recv_public):
-    key = RSA.generate(1024)
-
+def generate_public_key(key, recv_public):
     with open(recv_public, 'wb') as f:
         f.write(key.publickey().export_key(format='PEM'))
 
     return key
 
-def generate_private_key(recv_private_key):
-    key = RSA.generate(1024)
-
+def generate_private_key(key, recv_private_key):
     with open(recv_private_key, 'wb') as f:
         f.write(key.export_key(format='PEM'))
 
@@ -28,13 +24,14 @@ def generate_symmetric_key():
     return symmetric_key
 
 def encrypted_symmertric_key(symmetric_key):
-    salt = b'\x15\xd2\xa4\x1e\xb7\xcc\xe2\xa07\xf2F\xe8\xee`\x9d\xbb'
-    password = read_data('./key/recv_pub_key.pub')
+    with open('./key/recv_pub_key.pub', 'rb') as f:
+        key = RSA.importKey(f.read())
     
-    print(password)
-    key = PBKDF2(password, salt, dkLen=32)
-
-    return  key
+    cipher_rsa_encrypt = PKCS1_OAEP.new(key)
+    print(cipher_rsa_encrypt)
+    ciphertext = cipher_rsa_encrypt.encrypt(symmetric_key)
+    
+    return ciphertext
 
 def encrypt_data(key, data):
     cipher = AES.new(key, AES.MODE_CBC)
@@ -64,19 +61,20 @@ def decrypt_data(key, file_path):
     original = unpad(cipher.decrypt(decrypt_data), AES.block_size)
     print(original)
 
-
+key1 = RSA.generate(1024)
 data = read_data('input.txt')
-key = generate_public_key('./key/recv_pub_key.pub')
+key = generate_public_key(key1, './key/recv_pub_key.pub')
 
 symmetric_key = generate_symmetric_key()
 print(f'Symmetric key is: {symmetric_key}')
 
-encrypted_symmetric = encrypted_symmertric_key('./key/recv_pub_key.pub')
+encrypted_symmetric = encrypted_symmertric_key(symmetric_key=symmetric_key)
 print(f'Encrypted symmetric key is: {encrypted_symmetric}')
+
 with open('./key/encrypted_key.key', 'wb') as f:
     f.write(encrypted_symmetric)
 
-private_key = generate_private_key('./key/recv_private_key.key')
+private_key = generate_private_key(key1, './key/recv_private_key.key')
 recv_private_key = read_data('./key/recv_private_key.key')
 
 print(f'Receiver private key is: {recv_private_key}')
