@@ -1,0 +1,6 @@
+Step 1: receiver gen public and private key
+Step 2: Sender encrypt message with their secret key
+Step 3: Sender use Receiver public key to encrypt their private key 
+Step 4: Sender send message and encrypted key for receiver 
+Step 5: Receiver decrypt the encrypted key with their private key
+Step 6: Receiver user the result in previous step to decrypt the message
