@@ -24,10 +24,15 @@ def main():
     try:
         key = RSA.generate(1024)
         
-        # Generated symmetric key and asymmetric RSA keys
+        # # Generated symmetric key and asymmetric RSA keys
         RSA_public = generator.generate_public_key(key, args.receiver_pub_key)
         RSA_private = generator.generate_private_key(key, '../key/recv_private_key.key')
         symmetric = generator.generate_symmetric_key()
+        
+        sender_key = RSA.generate(1024)
+        # Gen symmetric key for sender use to hash
+        sender_private = generator.generate_private_key(sender_key, '../key/sender_private_key.key')
+        sender_public = generator.generate_public_key(sender_key, '../key/sender_public_key.key')
         
         # Encrypted symmetric key
         encrypted_symmetric = encrypt.encrypted_symmertric_key(symmetric_key=symmetric, recv_public_path=args.receiver_pub_key)
@@ -36,10 +41,17 @@ def main():
         
         data = encrypt.read_data(args.input_file)
         ciphered_data, iv = encrypt.encrypt_data(key=symmetric, data=data)
-        
-        print(iv)
+
         encrypt.write_data(args.output_encrypted_file, iv, ciphered_data)
         
+        with open('../key/sender_private_key.key', 'rb') as f:
+            sender_private_key = f.read()
+
+        encrypted_hash = encrypt.hash_data(sender_private_key, data)
+        print(encrypted_hash)
+        with open('../data/encrypted_hash.bin', 'wb') as f:
+            f.write(encrypted_hash)
+
     except Exception as e:
         print(f"Error while encrypted data: {e}")
 

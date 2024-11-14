@@ -2,6 +2,7 @@ from Crypto.Cipher import PKCS1_OAEP, AES
 from Crypto.Util.Padding import unpad
 from Crypto.PublicKey import RSA
 
+
 def decryped_symmetric_key(encrypted_key_path, private_path):
     ciphertext= ""
     with open(encrypted_key_path, 'rb') as f:
@@ -24,3 +25,12 @@ def decrypt_data(key, file_path):
     original = unpad(cipher.decrypt(decrypt_data), AES.block_size)
     
     return original
+
+def decrypt_encrypted_hash(sender_public):
+    encrypted_hash = open('../data/encrypted_hash.bin', 'rb').read()
+    
+    sender_public_key = RSA.import_key(sender_public)
+    cipher = PKCS1_OAEP.new(sender_public_key)
+    message = cipher.decrypt(encrypted_hash)
+    
+    return message
