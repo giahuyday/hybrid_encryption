@@ -1,5 +1,7 @@
 # hybrid_encryption
-
+- Lib
+    - pycryptodome==3.21.0
+    - argparse==1.4.0
 ## Project Hybrid Encryption
 - This project requires to build a basic system do simulation a exchange message use hybrid encyption
 - Folder Structure
